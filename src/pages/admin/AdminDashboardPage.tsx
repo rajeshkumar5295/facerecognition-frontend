@@ -11,6 +11,22 @@ interface DashboardStats {
   absentToday: number;
 }
 
+interface RecentActivity {
+  _id: string;
+  user: {
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    employeeId: string;
+    department: string;
+  };
+  type: 'check-in' | 'check-out';
+  checkInTime: string;
+  checkOutTime?: string;
+  isOffline: boolean;
+  createdAt: string;
+}
+
 const AdminDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
@@ -21,6 +37,8 @@ const AdminDashboardPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [organizationData, setOrganizationData] = useState<any>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +81,54 @@ const AdminDashboardPage: React.FC = () => {
 
     fetchData();
   }, [user]);
+
+  useEffect(() => {
+    const fetchRecentActivity = async () => {
+      try {
+        if (user?.organization) {
+          const activityResponse = await apiService.getRecentAttendanceActivity(5);
+          setRecentActivity(activityResponse.attendance);
+        }
+      } catch (error) {
+        console.error('Failed to fetch recent activity:', error);
+        toast.error('Failed to load recent activity');
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    fetchRecentActivity();
+  }, [user]);
+
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  };
+
+  const getActivityIcon = (type: string, isOffline: boolean) => {
+    if (type === 'check-in') {
+      return isOffline ? '📱' : '✅';
+    } else if (type === 'check-out') {
+      return isOffline ? '📱' : '❌';
+    }
+    return '📊';
+  };
+
+  const getActivityColor = (type: string) => {
+    if (type === 'check-in') return 'bg-green-100 text-green-600';
+    if (type === 'check-out') return 'bg-red-100 text-red-600';
+    return 'bg-blue-100 text-blue-600';
+  };
 
   if (loading) {
     return (
@@ -212,43 +278,36 @@ const AdminDashboardPage: React.FC = () => {
       {/* Recent Activity */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between py-3 border-b border-gray-200">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                <span className="text-green-600 font-medium">✓</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">John Doe checked in</p>
-                <p className="text-sm text-gray-600">2 minutes ago</p>
-              </div>
-            </div>
+        {activityLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
-
-          <div className="flex items-center justify-between py-3 border-b border-gray-200">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                <span className="text-blue-600 font-medium">+</span>
+        ) : recentActivity.length > 0 ? (
+          <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div key={activity._id} className="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0">
+                <div className="flex items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${getActivityColor(activity.type)}`}>
+                    <span className="font-medium">{getActivityIcon(activity.type, activity.isOffline)}</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {activity.user.fullName} {activity.type === 'check-in' ? 'checked in' : 'checked out'}
+                      {activity.isOffline && ' (offline)'}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {activity.user.department} • {formatTimeAgo(activity.checkInTime)}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-gray-900">New user registered: Jane Smith</p>
-                <p className="text-sm text-gray-600">15 minutes ago</p>
-              </div>
-            </div>
+            ))}
           </div>
-
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                <span className="text-red-600 font-medium">✗</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Mike Johnson checked out</p>
-                <p className="text-sm text-gray-600">1 hour ago</p>
-              </div>
-            </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No recent activity found</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

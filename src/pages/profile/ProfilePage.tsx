@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.tsx';
+
+import apiService from '../../services/api.ts';
+import toast from 'react-hot-toast';
 
 interface UserProfile {
   id: string;
@@ -13,59 +17,101 @@ interface UserProfile {
 }
 
 const ProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
+    phoneNumber: '',
     department: '',
-    position: ''
+    designation: ''
   });
 
   useEffect(() => {
-    // Mock data - replace with actual API call
-    setTimeout(() => {
-      const mockProfile: UserProfile = {
-        id: user?._id || '1',
-        name: user?.fullName || `${user?.firstName || 'John'} ${user?.lastName || 'Doe'}`,
-        email: user?.email || 'john.doe@example.com',
-        aadhaarNumber: user?.aadhaarNumber || '1234-5678-9012',
-        department: user?.department || 'Engineering',
-        position: user?.designation || 'Software Developer',
-        joinDate: user?.createdAt || '2024-01-15',
-        isActive: user?.isActive || true
-      };
-      setProfile(mockProfile);
-      setEditForm({
-        name: mockProfile.name,
-        email: mockProfile.email,
-        department: mockProfile.department,
-        position: mockProfile.position
-      });
-      setLoading(false);
-    }, 1000);
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.getProfile();
+        const userData = response.user;
+        
+        const profileData: UserProfile = {
+          id: userData._id,
+          name: userData.fullName,
+          email: userData.email,
+          aadhaarNumber: userData.aadhaarNumber || 'Not provided',
+          department: userData.department,
+          position: userData.designation,
+          joinDate: userData.createdAt,
+          isActive: userData.isActive
+        };
+        
+        setProfile(profileData);
+        setEditForm({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          phoneNumber: userData.phoneNumber,
+          department: userData.department,
+          designation: userData.designation
+        });
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        toast.error('Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchProfile();
+    }
   }, [user]);
 
-  const handleSave = () => {
-    if (profile) {
+  const handleSave = async () => {
+    try {
+      const updateData = {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        phoneNumber: editForm.phoneNumber,
+        department: editForm.department,
+        designation: editForm.designation
+      };
+
+      const response = await apiService.updateProfile(updateData);
+      const updatedUser = response.user;
+      
+      // Update the profile with new data
       setProfile({
-        ...profile,
-        ...editForm
+        ...profile!,
+        name: updatedUser.fullName,
+        department: updatedUser.department,
+        position: updatedUser.designation
       });
+      
+      // Update user data in AuthContext
+      updateUser(updatedUser);
+      
       setIsEditing(false);
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
     }
   };
 
   const handleCancel = () => {
     if (profile) {
+      const nameParts = profile.name.split(' ');
       setEditForm({
-        name: profile.name,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
         email: profile.email,
+        phoneNumber: editForm.phoneNumber,
         department: profile.department,
-        position: profile.position
+        designation: profile.position
       });
     }
     setIsEditing(false);
@@ -160,33 +206,57 @@ const ProfilePage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                 {isEditing ? (
                   <input
                     type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : (
                   <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-md">
-                    {profile.name}
+                    {editForm.firstName || profile.name.split(' ')[0] || profile.name}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                ) : (
+                  <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                    {editForm.lastName || profile.name.split(' ').slice(1).join(' ') || 'N/A'}
                   </div>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                  {profile.email} <span className="text-sm text-gray-500">(Cannot be changed)</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 {isEditing ? (
                   <input
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    type="tel"
+                    value={editForm.phoneNumber}
+                    onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter phone number"
                   />
                 ) : (
                   <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-md">
-                    {profile.email}
+                    {editForm.phoneNumber || 'Not provided'}
                   </div>
                 )}
               </div>
@@ -219,8 +289,8 @@ const ProfilePage: React.FC = () => {
                 {isEditing ? (
                   <input
                     type="text"
-                    value={editForm.position}
-                    onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
+                    value={editForm.designation}
+                    onChange={(e) => setEditForm({ ...editForm, designation: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : (
@@ -242,13 +312,22 @@ const ProfilePage: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-gray-200">
               <h4 className="text-md font-semibold text-gray-900 mb-4">Account Actions</h4>
               <div className="flex flex-wrap gap-4">
-                <button className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                <Link
+                  to="/change-password"
+                  className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors text-center"
+                >
                   Change Password
-                </button>
-                <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors">
+                </Link>
+                <Link
+                  to="/face-enrollment"
+                  className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-center"
+                >
                   Update Face Recognition
-                </button>
-                <button className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                </Link>
+                <button 
+                  onClick={() => toast('Account deactivation feature coming soon!')}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                >
                   Deactivate Account
                 </button>
               </div>

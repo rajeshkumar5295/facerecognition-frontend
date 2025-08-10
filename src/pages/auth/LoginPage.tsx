@@ -242,7 +242,7 @@ const LoginPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Data streams for right side */}
+          {/* Data streams for right side */} 
           <div className="absolute inset-0">
             {[...Array(8)].map((_, i) => (
               <div
@@ -361,9 +361,9 @@ const LoginPage: React.FC = () => {
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="font-medium text-indigo-300 hover:text-indigo-200 transition-colors duration-300">
+                <Link to="/forgot-password" className="font-medium text-indigo-300 hover:text-indigo-200 transition-colors duration-300">
                   Forgot password?
-                </a>
+                </Link>
               </div>
             </div>
 

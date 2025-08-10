@@ -1,6 +1,13 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import toast from 'react-hot-toast';
 
+// Declare process for TypeScript
+declare const process: {
+  env: {
+    REACT_APP_API_URL?: string;
+  };
+};
+
 // Types for API responses
 interface ApiResponse<T = any> {
   success: boolean;
@@ -194,6 +201,70 @@ class ApiService {
     );
   }
 
+  async forgotPassword(email: string): Promise<ApiResponse> {
+    return this.handleRequest(
+      this.api.post('/auth/forgot-password', { email })
+    );
+  }
+
+  async resetPassword(token: string, password: string, confirmPassword: string): Promise<LoginData> {
+    return this.handleRequest(
+      this.api.patch(`/auth/reset-password/${token}`, { password, confirmPassword })
+    );
+  }
+
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<ApiResponse> {
+    return this.handleRequest(
+      this.api.patch('/auth/change-password', { currentPassword, newPassword, confirmPassword })
+    );
+  }
+
+  async performAdminAction(userId: string, action: string, reason?: string): Promise<ApiResponse> {
+    return this.handleRequest(
+      this.api.post(`/users/${userId}/admin-action`, { action, reason })
+    );
+  }
+
+  async getAttendanceByDate(date: string, search?: string): Promise<{ attendance: AttendanceRecord[] }> {
+    return this.handleRequest(
+      this.api.get('/attendance/by-date', { 
+        params: { 
+          date,
+          search: search || undefined
+        }
+      })
+    );
+  }
+
+  async enrollFace(faceImage: File, faceDescriptors: number[]): Promise<ApiResponse> {
+    const formData = new FormData();
+    formData.append('faceImage', faceImage);
+    formData.append('faceDescriptors', JSON.stringify(faceDescriptors));
+    
+    return this.handleRequest(
+      this.api.post('/auth/enroll-face', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+    );
+  }
+
+  async uploadFaceBase64(faceImage: string, faceDescriptors: number[]): Promise<ApiResponse> {
+    return this.handleRequest(
+      this.api.post('/auth/upload-face-base64', {
+        faceImage,
+        faceDescriptors
+      })
+    );
+  }
+
+  async testCloudinary(): Promise<ApiResponse> {
+    return this.handleRequest(
+      this.api.post('/auth/test-cloudinary')
+    );
+  }
+
   async registerWithOrganization(userData: {
     firstName: string;
     lastName: string;
@@ -215,6 +286,18 @@ class ApiService {
   async getProfile(): Promise<{ user: User }> {
     return this.handleRequest(
       this.api.get('/auth/me')
+    );
+  }
+
+  async updateProfile(data: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    department?: string;
+    designation?: string;
+  }): Promise<{ user: User }> {
+    return this.handleRequest(
+      this.api.put('/auth/profile', data)
     );
   }
 
@@ -319,6 +402,34 @@ class ApiService {
   }> {
     return this.handleRequest(
       this.api.get('/attendance/history', { params })
+    );
+  }
+
+  // Get recent attendance activity for admin dashboard
+  async getRecentAttendanceActivity(limit: number = 10): Promise<{
+    attendance: Array<{
+      _id: string;
+      user: {
+        firstName: string;
+        lastName: string;
+        fullName: string;
+        employeeId: string;
+        department: string;
+      };
+      type: 'check-in' | 'check-out';
+      checkInTime: string;
+      checkOutTime?: string;
+      isOffline: boolean;
+      createdAt: string;
+    }>;
+  }> {
+    return this.handleRequest(
+      this.api.get('/attendance/all', { 
+        params: { 
+          limit, 
+          page: 1
+        } 
+      })
     );
   }
 

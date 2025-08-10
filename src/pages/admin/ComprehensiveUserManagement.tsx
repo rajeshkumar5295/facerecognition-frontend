@@ -64,6 +64,39 @@ const ComprehensiveUserManagement: React.FC = () => {
     }));
   };
 
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      const action = currentStatus ? 'deactivate' : 'activate';
+      const response = await apiService.performAdminAction(userId, action);
+      
+      if (response.success) {
+        toast.success(`User ${action}d successfully!`);
+        fetchUsers(); // Refresh the data
+      } else {
+        toast.error(response.message || `Failed to ${action} user`);
+      }
+    } catch (error: any) {
+      console.error('Toggle user status error:', error);
+      toast.error(error.response?.data?.message || 'Failed to update user status');
+    }
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      const response = await apiService.performAdminAction(userId, 'approve');
+      
+      if (response.success) {
+        toast.success('User approved successfully!');
+        fetchUsers(); // Refresh the data
+      } else {
+        toast.error(response.message || 'Failed to approve user');
+      }
+    } catch (error: any) {
+      console.error('Approve user error:', error);
+      toast.error(error.response?.data?.message || 'Failed to approve user');
+    }
+  };
+
   const exportToCSV = () => {
     if (!data?.users.length) {
       toast.error('No data to export');
@@ -320,6 +353,9 @@ const ComprehensiveUserManagement: React.FC = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   System Info
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -391,6 +427,30 @@ const ComprehensiveUserManagement: React.FC = () => {
                       <div className="text-xs">
                         Joined: {new Date(user.createdAt).toLocaleDateString()}
                       </div>
+                    </div>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex flex-col space-y-2">
+                      <button
+                        onClick={() => handleToggleUserStatus(user._id, user.isActive)}
+                        className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
+                          user.isActive 
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        } transition-colors`}
+                      >
+                        {user.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
+                      {!user.isApproved && (
+                        <button
+                          onClick={() => handleApproveUser(user._id)}
+                          className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                        >
+                          Approve
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

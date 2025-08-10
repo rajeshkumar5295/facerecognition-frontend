@@ -18,6 +18,9 @@ import ContactPage from './pages/ContactPage.tsx';
 import ReviewsPage from './pages/ReviewsPage.tsx';
 import LoginPage from './pages/auth/LoginPage.tsx';
 import RegisterPage from './pages/auth/RegisterPage.tsx';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.tsx';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage.tsx';
+import ChangePasswordPage from './pages/auth/ChangePasswordPage.tsx';
 import OrganizationRegistration from './pages/auth/OrganizationRegistration.tsx';
 import EmployeeRegistration from './pages/auth/EmployeeRegistration.tsx';
 import DashboardPage from './pages/dashboard/DashboardPage.tsx';
@@ -166,6 +169,18 @@ const AppRoutes: React.FC = () => {
         </PublicRoute>
       } />
 
+      <Route path="/forgot-password" element={
+        <PublicRoute>
+          <ForgotPasswordPage />
+        </PublicRoute>
+      } />
+
+      <Route path="/reset-password/:token" element={
+        <PublicRoute>
+          <ResetPasswordPage />
+        </PublicRoute>
+      } />
+
       {/* Special Routes */}
       <Route path="/pending-approval" element={
         <ProtectedRoute requireApproval={false}>
@@ -210,6 +225,14 @@ const AppRoutes: React.FC = () => {
         <ProtectedRoute>
           <Layout>
             <ProfilePage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/change-password" element={
+        <ProtectedRoute>
+          <Layout>
+            <ChangePasswordPage />
           </Layout>
         </ProtectedRoute>
       } />

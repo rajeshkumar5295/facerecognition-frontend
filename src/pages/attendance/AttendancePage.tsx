@@ -50,6 +50,19 @@ const AttendancePage: React.FC = () => {
     };
   }, [cameraActive]);
 
+  // Cleanup on unmount - ensure camera is stopped
+  useEffect(() => {
+    return () => {
+      setCameraActive(false);
+      stopFaceDetection();
+      // Stop all video tracks to ensure camera is released
+      if (webcamRef.current?.video?.srcObject) {
+        const stream = webcamRef.current.video.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   const loadTodayAttendance = async () => {
     try {
       const { attendance } = await apiService.getTodayAttendance();
@@ -224,7 +237,17 @@ const AttendancePage: React.FC = () => {
   };
 
   const toggleCamera = () => {
-    setCameraActive(!cameraActive);
+    if (cameraActive) {
+      // Stop camera and clean up
+      setCameraActive(false);
+      if (webcamRef.current?.video?.srcObject) {
+        const stream = webcamRef.current.video.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+    } else {
+      // Start camera
+      setCameraActive(true);
+    }
   };
 
   const formatTime = (dateString: string) => {
@@ -352,19 +375,42 @@ const AttendancePage: React.FC = () => {
 
         {/* Camera Section */}
         <div className="space-y-4">
-          {!cameraActive ? (
+          {!user?.faceEnrolled ? (
+            /* Face Not Enrolled - Show Upload Face Button */
+            <div className="text-center py-12 border-2 border-dashed border-orange-300 rounded-lg bg-orange-50">
+              <svg className="mx-auto h-12 w-12 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <h3 className="mt-2 text-lg font-medium text-orange-900">Face Not Enrolled</h3>
+              <p className="mt-1 text-sm text-orange-700">
+                You need to upload your face first before marking attendance
+              </p>
+              <div className="mt-6">
+                <button
+                  onClick={() => window.location.href = '/face-enrollment'}
+                  className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  👤 Upload Your Face
+                </button>
+              </div>
+              <div className="mt-4 text-xs text-orange-600">
+                <p>This is a one-time setup required for face recognition attendance</p>
+              </div>
+            </div>
+          ) : !cameraActive ? (
+            /* Face Enrolled - Show Mark Attendance Button */
             <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 002 2v8a2 2 0 002 2z" />
               </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Camera Inactive</h3>
-              <p className="mt-1 text-sm text-gray-500">Click the button below to start face recognition</p>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">Ready to Mark Attendance</h3>
+              <p className="mt-1 text-sm text-gray-500">Click the button below to start attendance marking</p>
               <div className="mt-6">
                 <button
                   onClick={toggleCamera}
-                  className="btn btn-primary"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
-                  Start Camera
+                  📷 Mark Attendance
                 </button>
               </div>
             </div>
