@@ -207,27 +207,29 @@ const LandingPage: React.FC = () => {
   // Face Recognition Demo Images
   const demoImages = [
     {
-      src: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop",
-      alt: "Face Recognition Dashboard",
-      status: "Live Recognition Active",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
-      alt: "Facial Detection Analysis",
-      status: "Face Detected Successfully",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&h=400&fit=crop",
+      src: "https://cdn.vectorstock.com/i/500p/50/11/android-face-recognition-system-vector-24835011.jpg",
       alt: "Multi-Face Recognition",
       status: "Multiple Faces Recognized",
     },
     {
-      src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&h=400&fit=crop",
+      src: "https://res.cloudinary.com/jerrick/image/upload/d_642250b563292b35f27461a7.png,f_jpg,fl_progressive,q_auto,w_1024/687b508e7b8ac5001d3311da.jpg",
       alt: "Security Verification",
       status: "Identity Verified",
     },
     {
-      src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop",
+      src: "https://res.cloudinary.com/upwork-cloud/image/upload/c_scale,w_1000/v1707909814/catalog/1471808406590861312/t7mgv92p6qxox8xb3dvd.webp",
+      alt: "Facial Detection Analysis",
+      status: "Face Detected Successfully",
+    },
+
+    {
+      src: "https://recfaces.com/wp-content/uploads/2021/01/face_scan_adobe-830x553.jpg",
+      alt: "Face Recognition Dashboard",
+      status: "Live Recognition Active",
+    },
+
+    {
+      src: "https://innefu.com/wp-content/uploads/2025/05/How-AI-Facial-Recognition-Technology-Identifies-Criminals-1024x576.webp",
       alt: "Real-time Processing",
       status: "Processing in Real-time",
     },

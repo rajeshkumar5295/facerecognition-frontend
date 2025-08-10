@@ -1,7 +1,13 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import apiService, { User } from '../services/api.ts';
-import faceRecognitionService from '../services/faceRecognition.ts';
-import toast from 'react-hot-toast';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import apiService, { User } from "../services/api.ts";
+import faceRecognitionService from "../services/faceRecognition.ts";
+import toast from "react-hot-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -40,25 +46,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initializeAuth = async () => {
       try {
         // Initialize face recognition service
-        console.log('Initializing face recognition service...');
+        console.log("Initializing face recognition service...");
         await faceRecognitionService.initialize();
-        console.log('Face recognition service initialized successfully');
-        
+        console.log("Face recognition service initialized successfully");
+
         // Check for existing token and verify it
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (token) {
           try {
             const { user: userData } = await apiService.verifyToken();
             setUser(userData);
           } catch (error) {
             // Token is invalid, clear it
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
           }
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
-        console.error('Face recognition service initialization failed:', error);
+        console.error("Error initializing auth:", error);
+        console.error("Face recognition service initialization failed:", error);
         // Don't show error toast here as it's not critical for login functionality
         // The face recognition features will handle their own error messages
       } finally {
@@ -72,21 +78,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Login function
   const login = async (email: string, password: string): Promise<void> => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const { user: userData, token } = await apiService.login(email, password);
-      
+
       // Store token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
-      
+
       toast.success(`Welcome back, ${userData.firstName}!`);
     } catch (error: any) {
-      const message = error.message || 'Login failed';
+      const message = error.message || "Login failed";
       toast.error(message);
-      throw error;
+      // throw error;
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -95,15 +101,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const { user: newUser, token } = await apiService.register(userData);
-      
+
       // Store token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(newUser));
       setUser(newUser);
-      
-      toast.success('Registration successful! Please wait for admin approval.');
+
+      toast.success("Registration successful! Please wait for admin approval.");
     } catch (error: any) {
-      const message = error.message || 'Registration failed';
+      const message = error.message || "Registration failed";
       toast.error(message);
       throw error;
     } finally {
@@ -116,13 +122,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await apiService.logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       // Clear local storage and state
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       setUser(null);
-      toast.success('Logged out successfully');
+      toast.success("Logged out successfully");
     }
   };
 
@@ -131,7 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     }
   };
 
@@ -140,10 +146,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { user: userData } = await apiService.getProfile();
       setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(userData));
     } catch (error: any) {
-      console.error('Error refreshing user:', error);
-      if (error.message.includes('401')) {
+      console.error("Error refreshing user:", error);
+      if (error.message.includes("401")) {
         // Token expired, logout
         await logout();
       }
@@ -156,15 +162,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (user && navigator.onLine) {
         try {
           await apiService.syncOfflineAttendance();
-          toast.success('Offline data synced successfully');
+          toast.success("Offline data synced successfully");
         } catch (error) {
-          console.error('Error syncing offline data:', error);
+          console.error("Error syncing offline data:", error);
         }
       }
     };
 
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
   }, [user]);
 
   const value: AuthContextType = {
@@ -177,20 +183,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook to use auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
-export default AuthContext; 
+export default AuthContext;

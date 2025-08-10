@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import toast from 'react-hot-toast';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import toast from "react-hot-toast";
 
 // Declare process for TypeScript
 declare const process: {
@@ -26,7 +26,7 @@ interface User {
   department: string;
   designation: string;
   phoneNumber: string;
-  role: 'employee' | 'admin' | 'hr' | 'super-admin';
+  role: "employee" | "admin" | "hr" | "super-admin";
   organization?: string;
   isActive: boolean;
   isApproved: boolean;
@@ -40,7 +40,7 @@ interface User {
     checkInTime: string | null;
     checkOutTime: string | null;
     totalHours: number;
-    status: 'present' | 'absent' | 'partial';
+    status: "present" | "absent" | "partial";
     checkInFormatted: string;
     checkOutFormatted: string;
   };
@@ -49,7 +49,14 @@ interface User {
 interface Organization {
   _id: string;
   name: string;
-  type: 'school' | 'office' | 'hotel' | 'hospital' | 'factory' | 'retail' | 'other';
+  type:
+    | "school"
+    | "office"
+    | "hotel"
+    | "hospital"
+    | "factory"
+    | "retail"
+    | "other";
   description?: string;
   address?: {
     street?: string;
@@ -73,7 +80,7 @@ interface Organization {
     allowOfflineMode: boolean;
   };
   subscription: {
-    plan: 'free' | 'basic' | 'premium' | 'enterprise';
+    plan: "free" | "basic" | "premium" | "enterprise";
     maxUsers: number;
     expiresAt?: string;
     isActive: boolean;
@@ -97,12 +104,12 @@ interface LoginData {
 interface AttendanceRecord {
   _id: string;
   user: User | string;
-  type: 'check-in' | 'check-out' | 'break-start' | 'break-end';
+  type: "check-in" | "check-out" | "break-start" | "break-end";
   checkInTime: string;
   checkOutTime?: string;
-  recognitionMethod: 'face-recognition' | 'manual' | 'aadhaar-assisted';
+  recognitionMethod: "face-recognition" | "manual" | "aadhaar-assisted";
   faceConfidence?: number;
-  status: 'pending' | 'approved' | 'rejected' | 'auto-approved';
+  status: "pending" | "approved" | "rejected" | "auto-approved";
   workingHours: number;
   breakTime: number;
   overtime: number;
@@ -116,13 +123,13 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    
+    this.baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 30000,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -133,7 +140,7 @@ class ApiService {
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -144,26 +151,27 @@ class ApiService {
       }
     );
 
+    //TO Do:have work on this
     // Response interceptor for handling errors
-    this.api.interceptors.response.use(
-      (response: AxiosResponse) => {
-        return response;
-      },
-      (error) => {
-        if (error.response?.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-          toast.error('Session expired. Please login again.');
-        } else if (error.response?.status === 403) {
-          toast.error('Access denied. Insufficient permissions.');
-        } else if (error.response?.status >= 500) {
-          toast.error('Server error. Please try again later.');
-        }
-        return Promise.reject(error);
-      }
-    );
+    // this.api.interceptors.response.use(
+    //   (response: AxiosResponse) => {
+    //     return response;
+    //   },
+    //   (error) => {
+    //     if (error.response?.status === 401) {
+    //       // Token expired or invalid
+    //       localStorage.removeItem("token");
+    //       localStorage.removeItem("user");
+    //       window.location.href = "/login";
+    //       toast.error("Session expired. Please login again.");
+    //     } else if (error.response?.status === 403) {
+    //       toast.error("Access denied. Insufficient permissions.");
+    //     } else if (error.response?.status >= 500) {
+    //       toast.error("Server error. Please try again later.");
+    //     }
+    //     return Promise.reject(error);
+    //   }
+    // );
   }
 
   private async handleRequest<T>(
@@ -173,15 +181,17 @@ class ApiService {
       const response = await request;
       return response.data.data as T;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'An error occurred';
+      const message = "Please create your account first !";
       throw new Error(message);
+      // console.log(error);
+      // return error;
     }
   }
 
   // Authentication APIs
   async login(email: string, password: string): Promise<LoginData> {
     return this.handleRequest(
-      this.api.post('/auth/login', { email, password })
+      this.api.post("/auth/login", { email, password })
     );
   }
 
@@ -196,73 +206,97 @@ class ApiService {
     password: string;
     aadhaarNumber?: string;
   }): Promise<LoginData> {
-    return this.handleRequest(
-      this.api.post('/auth/register', userData)
-    );
+    return this.handleRequest(this.api.post("/auth/register", userData));
   }
 
   async forgotPassword(email: string): Promise<ApiResponse> {
     return this.handleRequest(
-      this.api.post('/auth/forgot-password', { email })
+      this.api.post("/auth/forgot-password", { email })
     );
   }
 
-  async resetPassword(token: string, password: string, confirmPassword: string): Promise<LoginData> {
+  async resetPassword(
+    token: string,
+    password: string,
+    confirmPassword: string
+  ): Promise<LoginData> {
     return this.handleRequest(
-      this.api.patch(`/auth/reset-password/${token}`, { password, confirmPassword })
+      this.api.patch(`/auth/reset-password/${token}`, {
+        password,
+        confirmPassword,
+      })
     );
   }
 
-  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<ApiResponse> {
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<ApiResponse> {
     return this.handleRequest(
-      this.api.patch('/auth/change-password', { currentPassword, newPassword, confirmPassword })
+      this.api.patch("/auth/change-password", {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      })
     );
   }
 
-  async performAdminAction(userId: string, action: string, reason?: string): Promise<ApiResponse> {
+  async performAdminAction(
+    userId: string,
+    action: string,
+    reason?: string
+  ): Promise<ApiResponse> {
     return this.handleRequest(
       this.api.post(`/users/${userId}/admin-action`, { action, reason })
     );
   }
 
-  async getAttendanceByDate(date: string, search?: string): Promise<{ attendance: AttendanceRecord[] }> {
+  async getAttendanceByDate(
+    date: string,
+    search?: string
+  ): Promise<{ attendance: AttendanceRecord[] }> {
     return this.handleRequest(
-      this.api.get('/attendance/by-date', { 
-        params: { 
+      this.api.get("/attendance/by-date", {
+        params: {
           date,
-          search: search || undefined
-        }
+          search: search || undefined,
+        },
       })
     );
   }
 
-  async enrollFace(faceImage: File, faceDescriptors: number[]): Promise<ApiResponse> {
+  async enrollFace(
+    faceImage: File,
+    faceDescriptors: number[]
+  ): Promise<ApiResponse> {
     const formData = new FormData();
-    formData.append('faceImage', faceImage);
-    formData.append('faceDescriptors', JSON.stringify(faceDescriptors));
-    
+    formData.append("faceImage", faceImage);
+    formData.append("faceDescriptors", JSON.stringify(faceDescriptors));
+
     return this.handleRequest(
-      this.api.post('/auth/enroll-face', formData, {
+      this.api.post("/auth/enroll-face", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       })
     );
   }
 
-  async uploadFaceBase64(faceImage: string, faceDescriptors: number[]): Promise<ApiResponse> {
+  async uploadFaceBase64(
+    faceImage: string,
+    faceDescriptors: number[]
+  ): Promise<ApiResponse> {
     return this.handleRequest(
-      this.api.post('/auth/upload-face-base64', {
+      this.api.post("/auth/upload-face-base64", {
         faceImage,
-        faceDescriptors
+        faceDescriptors,
       })
     );
   }
 
   async testCloudinary(): Promise<ApiResponse> {
-    return this.handleRequest(
-      this.api.post('/auth/test-cloudinary')
-    );
+    return this.handleRequest(this.api.post("/auth/test-cloudinary"));
   }
 
   async registerWithOrganization(userData: {
@@ -279,14 +313,12 @@ class ApiService {
     aadhaarNumber?: string;
   }): Promise<LoginData> {
     return this.handleRequest(
-      this.api.post('/auth/register-with-org', userData)
+      this.api.post("/auth/register-with-org", userData)
     );
   }
 
   async getProfile(): Promise<{ user: User }> {
-    return this.handleRequest(
-      this.api.get('/auth/me')
-    );
+    return this.handleRequest(this.api.get("/auth/me"));
   }
 
   async updateProfile(data: {
@@ -296,21 +328,15 @@ class ApiService {
     department?: string;
     designation?: string;
   }): Promise<{ user: User }> {
-    return this.handleRequest(
-      this.api.put('/auth/profile', data)
-    );
+    return this.handleRequest(this.api.put("/auth/profile", data));
   }
 
   async logout(): Promise<void> {
-    return this.handleRequest(
-      this.api.post('/auth/logout')
-    );
+    return this.handleRequest(this.api.post("/auth/logout"));
   }
 
   async verifyToken(): Promise<{ user: User }> {
-    return this.handleRequest(
-      this.api.post('/auth/verify-token')
-    );
+    return this.handleRequest(this.api.post("/auth/verify-token"));
   }
 
   // Face Recognition APIs
@@ -323,28 +349,26 @@ class ApiService {
     attemptsRemaining: number;
   }> {
     const formData = new FormData();
-    formData.append('faceDescriptor', JSON.stringify(faceDescriptor));
+    formData.append("faceDescriptor", JSON.stringify(faceDescriptor));
     if (faceImage) {
-      formData.append('faceImage', faceImage);
+      formData.append("faceImage", faceImage);
     }
 
     return this.handleRequest(
-      this.api.post('/auth/face/enroll', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      this.api.post("/auth/face/enroll", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       })
     );
   }
 
   async resetFaceEnrollment(): Promise<void> {
-    return this.handleRequest(
-      this.api.delete('/auth/face/reset')
-    );
+    return this.handleRequest(this.api.delete("/auth/face/reset"));
   }
 
   // Attendance APIs
   async markAttendanceWithFace(
     faceDescriptor: number[],
-    type: 'check-in' | 'check-out' | 'break-start' | 'break-end',
+    type: "check-in" | "check-out" | "break-start" | "break-end",
     confidence: number,
     faceImage?: File,
     location?: {
@@ -355,33 +379,31 @@ class ApiService {
     notes?: string
   ): Promise<{ attendance: AttendanceRecord }> {
     const formData = new FormData();
-    formData.append('faceDescriptor', JSON.stringify(faceDescriptor));
-    formData.append('type', type);
-    formData.append('confidence', confidence.toString());
-    
+    formData.append("faceDescriptor", JSON.stringify(faceDescriptor));
+    formData.append("type", type);
+    formData.append("confidence", confidence.toString());
+
     if (location) {
-      formData.append('location', JSON.stringify(location));
+      formData.append("location", JSON.stringify(location));
     }
-    
+
     if (notes) {
-      formData.append('notes', notes);
+      formData.append("notes", notes);
     }
 
     if (faceImage) {
-      formData.append('faceImage', faceImage);
+      formData.append("faceImage", faceImage);
     }
 
     return this.handleRequest(
-      this.api.post('/attendance/face-recognition', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      this.api.post("/attendance/face-recognition", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       })
     );
   }
 
   async getTodayAttendance(): Promise<{ attendance: AttendanceRecord[] }> {
-    return this.handleRequest(
-      this.api.get('/attendance/today')
-    );
+    return this.handleRequest(this.api.get("/attendance/today"));
   }
 
   async getAttendanceHistory(params?: {
@@ -400,9 +422,7 @@ class ApiService {
       limit: number;
     };
   }> {
-    return this.handleRequest(
-      this.api.get('/attendance/history', { params })
-    );
+    return this.handleRequest(this.api.get("/attendance/history", { params }));
   }
 
   // Get recent attendance activity for admin dashboard
@@ -416,7 +436,7 @@ class ApiService {
         employeeId: string;
         department: string;
       };
-      type: 'check-in' | 'check-out';
+      type: "check-in" | "check-out";
       checkInTime: string;
       checkOutTime?: string;
       isOffline: boolean;
@@ -424,11 +444,11 @@ class ApiService {
     }>;
   }> {
     return this.handleRequest(
-      this.api.get('/attendance/all', { 
-        params: { 
-          limit, 
-          page: 1
-        } 
+      this.api.get("/attendance/all", {
+        params: {
+          limit,
+          page: 1,
+        },
       })
     );
   }
@@ -447,7 +467,7 @@ class ApiService {
     };
   }> {
     return this.handleRequest(
-      this.api.get('/attendance/summary', {
+      this.api.get("/attendance/summary", {
         params: { startDate, endDate },
       })
     );
@@ -472,14 +492,12 @@ class ApiService {
       limit: number;
     };
   }> {
-    return this.handleRequest(
-      this.api.get('/users/all', { params })
-    );
+    return this.handleRequest(this.api.get("/users/all", { params }));
   }
 
   async performAdminAction(
     userId: string,
-    action: 'approve' | 'reject' | 'activate' | 'deactivate' | 'reset-face',
+    action: "approve" | "reject" | "activate" | "deactivate" | "reset-face",
     reason?: string
   ): Promise<{ user: User }> {
     return this.handleRequest(
@@ -504,9 +522,7 @@ class ApiService {
       limit: number;
     };
   }> {
-    return this.handleRequest(
-      this.api.get('/organizations', { params })
-    );
+    return this.handleRequest(this.api.get("/organizations", { params }));
   }
 
   async createOrganization(data: {
@@ -520,9 +536,7 @@ class ApiService {
     settings?: any;
     subscription?: any;
   }): Promise<{ organization: Organization }> {
-    return this.handleRequest(
-      this.api.post('/organizations', data)
-    );
+    return this.handleRequest(this.api.post("/organizations", data));
   }
 
   async registerOrganization(data: {
@@ -548,38 +562,38 @@ class ApiService {
     };
   }): Promise<LoginData> {
     return this.handleRequest(
-      this.api.post('/auth/register-organization', data)
+      this.api.post("/auth/register-organization", data)
     );
   }
 
   async getOrganization(id: string): Promise<{ organization: Organization }> {
-    return this.handleRequest(
-      this.api.get(`/organizations/${id}`)
-    );
+    return this.handleRequest(this.api.get(`/organizations/${id}`));
   }
 
-  async updateOrganization(id: string, data: any): Promise<{ organization: Organization }> {
-    return this.handleRequest(
-      this.api.put(`/organizations/${id}`, data)
-    );
+  async updateOrganization(
+    id: string,
+    data: any
+  ): Promise<{ organization: Organization }> {
+    return this.handleRequest(this.api.put(`/organizations/${id}`, data));
   }
 
   async deleteOrganization(id: string): Promise<{ message: string }> {
-    return this.handleRequest(
-      this.api.delete(`/organizations/${id}`)
-    );
+    return this.handleRequest(this.api.delete(`/organizations/${id}`));
   }
 
-  async getOrganizationUsers(orgId: string, params?: {
-    page?: number;
-    limit?: number;
-    department?: string;
-    role?: string;
-    isActive?: boolean;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: string;
-  }): Promise<{
+  async getOrganizationUsers(
+    orgId: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      department?: string;
+      role?: string;
+      isActive?: boolean;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: string;
+    }
+  ): Promise<{
     users: User[];
     organization: Organization;
     pagination: {
@@ -596,13 +610,21 @@ class ApiService {
 
   async getOrganizationStats(orgId: string): Promise<{
     organization: { name: string; type: string };
-    userStats: { total: number; active: number; approved: number; pending: number };
-    todayStats: { checkIns: number; checkOuts: number; present: number; absent: number };
+    userStats: {
+      total: number;
+      active: number;
+      approved: number;
+      pending: number;
+    };
+    todayStats: {
+      checkIns: number;
+      checkOuts: number;
+      present: number;
+      absent: number;
+    };
     departmentStats: Array<{ _id: string; count: number; active: number }>;
   }> {
-    return this.handleRequest(
-      this.api.get(`/organizations/${orgId}/stats`)
-    );
+    return this.handleRequest(this.api.get(`/organizations/${orgId}/stats`));
   }
 
   async getGlobalStats(): Promise<{
@@ -612,12 +634,12 @@ class ApiService {
     totalAttendance: number;
     todayAttendance: number;
   }> {
-    return this.handleRequest(
-      this.api.get('/organizations/global/stats')
-    );
+    return this.handleRequest(this.api.get("/organizations/global/stats"));
   }
 
-  async getOrganizationByInviteCode(inviteCode: string): Promise<{ organization: Organization }> {
+  async getOrganizationByInviteCode(
+    inviteCode: string
+  ): Promise<{ organization: Organization }> {
     return this.handleRequest(
       this.api.get(`/organizations/by-invite/${inviteCode}`)
     );
@@ -640,15 +662,11 @@ class ApiService {
       resumedWork: number;
     };
   }> {
-    return this.handleRequest(
-      this.api.get('/users/stats')
-    );
+    return this.handleRequest(this.api.get("/users/stats"));
   }
 
   async getPendingApprovalUsers(): Promise<{ users: User[] }> {
-    return this.handleRequest(
-      this.api.get('/users/pending-approval')
-    );
+    return this.handleRequest(this.api.get("/users/pending-approval"));
   }
 
   // Aadhaar APIs
@@ -657,7 +675,7 @@ class ApiService {
     expiresIn: number;
   }> {
     return this.handleRequest(
-      this.api.post('/aadhaar/send-otp', { aadhaarNumber })
+      this.api.post("/aadhaar/send-otp", { aadhaarNumber })
     );
   }
 
@@ -670,7 +688,7 @@ class ApiService {
     userInfo: any;
   }> {
     return this.handleRequest(
-      this.api.post('/aadhaar/verify-otp', { aadhaarNumber, otp })
+      this.api.post("/aadhaar/verify-otp", { aadhaarNumber, otp })
     );
   }
 
@@ -680,9 +698,7 @@ class ApiService {
     verificationDate?: string;
     hasAadhaar: boolean;
   }> {
-    return this.handleRequest(
-      this.api.get('/aadhaar/status')
-    );
+    return this.handleRequest(this.api.get("/aadhaar/status"));
   }
 
   async validateAadhaar(aadhaarNumber: string): Promise<{
@@ -691,7 +707,7 @@ class ApiService {
     canProceed: boolean;
   }> {
     return this.handleRequest(
-      this.api.post('/aadhaar/validate', { aadhaarNumber })
+      this.api.post("/aadhaar/validate", { aadhaarNumber })
     );
   }
 
@@ -708,23 +724,23 @@ class ApiService {
   async storeOfflineAttendance(attendanceData: any): Promise<void> {
     try {
       const offlineData = JSON.parse(
-        localStorage.getItem('offlineAttendance') || '[]'
+        localStorage.getItem("offlineAttendance") || "[]"
       );
       offlineData.push({
         ...attendanceData,
         timestamp: Date.now(),
         synced: false,
       });
-      localStorage.setItem('offlineAttendance', JSON.stringify(offlineData));
+      localStorage.setItem("offlineAttendance", JSON.stringify(offlineData));
     } catch (error) {
-      console.error('Error storing offline attendance:', error);
+      console.error("Error storing offline attendance:", error);
     }
   }
 
   async syncOfflineAttendance(): Promise<void> {
     try {
       const offlineData = JSON.parse(
-        localStorage.getItem('offlineAttendance') || '[]'
+        localStorage.getItem("offlineAttendance") || "[]"
       );
       const unsyncedData = offlineData.filter((item: any) => !item.synced);
 
@@ -738,18 +754,18 @@ class ApiService {
             item.location,
             item.notes
           );
-          
+
           // Mark as synced
           item.synced = true;
         } catch (error) {
-          console.error('Error syncing attendance item:', error);
+          console.error("Error syncing attendance item:", error);
         }
       }
 
       // Update localStorage
-      localStorage.setItem('offlineAttendance', JSON.stringify(offlineData));
+      localStorage.setItem("offlineAttendance", JSON.stringify(offlineData));
     } catch (error) {
-      console.error('Error syncing offline attendance:', error);
+      console.error("Error syncing offline attendance:", error);
     }
   }
 }
@@ -759,10 +775,4 @@ const apiService = new ApiService();
 export default apiService;
 
 // Export types for use in components
-export type {
-  User,
-  Organization,
-  LoginData,
-  AttendanceRecord,
-  ApiResponse,
-}; 
+export type { User, Organization, LoginData, AttendanceRecord, ApiResponse };
