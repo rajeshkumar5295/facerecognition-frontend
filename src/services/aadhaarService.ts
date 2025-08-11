@@ -17,8 +17,7 @@ interface AadhaarVerifyResponse {
 }
 
 class AadhaarService {
-  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
+  private baseUrl = process.env.REACT_APP_API_URL || 'https://facerecognition-backend-jcu4.onrender.com/api'
   async sendOtp(aadhaarNumber: string): Promise<AadhaarOtpResponse> {
     try {
       // In development, simulate OTP sending
